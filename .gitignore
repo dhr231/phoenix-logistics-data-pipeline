@@ -1,0 +1,11 @@
+# Business / raw data
+*.xlsx
+*.xls
+*.db
+
+# Python
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
