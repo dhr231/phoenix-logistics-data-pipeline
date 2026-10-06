@@ -1,5 +1,6 @@
 import pandas as pd
 import sqlite3
+from reconcile_lr import reconcile_lr
 
 booking = pd.read_excel("booking_report.xlsx")
 billing = pd.read_excel("bill_register.xlsx")
@@ -252,3 +253,18 @@ if len(common_lr) == 0:
     print("JOIN STATUS: NOT RECOMMENDED")
 else:
     print("JOIN STATUS: POSSIBLE")
+
+
+print("============= DAY 6 1.40PM ===============")
+
+reconciliation_lr = reconcile_lr(booking, billing_for_join)
+
+print("========= LR RECONCILIATION USING FUNCTION =========")
+print("\n Common LR : ", len(reconciliation_lr["common_lr"]))
+print("Booking-only LR:", len(reconciliation_lr["booking_only_lr"]))
+print("Billing-only LR:", len(reconciliation_lr["billing_only_lr"]))
+print(
+    "Duplicate LR groups:",
+    len(reconciliation_lr["duplicate_lr_count"])
+)
+print("Join status:", reconciliation_lr["join_status"])
