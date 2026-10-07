@@ -268,3 +268,33 @@ print(
     len(reconciliation_lr["duplicate_lr_count"])
 )
 print("Join status:", reconciliation_lr["join_status"])
+
+print("=========== DAY 7 11.50AM ============")
+
+report = pd.DataFrame({
+    "Metric": [
+        "Booking Rows",
+        "Billing Rows",
+        "Common LR",
+        "Booking-only LR",
+        "Billing-only LR",
+        "Duplicate LR Groups",
+        "Join Status"
+    ],
+    "Value": [
+        booking.shape[0],
+        billing_for_join.shape[0],
+        len(reconciliation_lr["common_lr"]),
+        len(reconciliation_lr["booking_only_lr"]),
+        len(reconciliation_lr["billing_only_lr"]),
+        len(reconciliation_lr["duplicate_lr_count"]),
+        reconciliation_lr["join_status"]
+    ]
+})
+print(report)
+report.to_csv("reconciliation_report.csv", index=False)
+print("Report saved to reconciliation_report.csv")
+
+saved_report = pd.read_csv("reconciliation_report.csv")
+print("\n ============== SAVED REPORT =============")
+print(saved_report)
