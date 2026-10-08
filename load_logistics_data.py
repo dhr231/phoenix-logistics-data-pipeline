@@ -298,3 +298,35 @@ print("Report saved to reconciliation_report.csv")
 saved_report = pd.read_csv("reconciliation_report.csv")
 print("\n ============== SAVED REPORT =============")
 print(saved_report)
+
+print("========== DAY 8 10.50AM ===========")
+
+exceptions = []
+
+for lr in reconciliation_lr["booking_only_lr"]:
+    exceptions.append({
+        "Exception_type" : "BOOKING_ONLY",
+        "LR_NO": lr
+    })
+
+for lr in reconciliation_lr["billing_only_lr"]:
+    exceptions.append({
+        "Exception_type" : "BILLING_ONLY",
+        "LR_NO": lr
+    })
+
+for lr in reconciliation_lr["duplicate_lr_count"].index:
+    exceptions.append({
+        "Exception_type" : "DUPLICATE_BILLING",
+        "LR_NO": lr
+    })
+
+data_quality_report = pd.DataFrame(exceptions)
+
+data_quality_report.to_csv("data_quality_report.csv", index=False)
+
+print("\n Data Quality Report")
+print(data_quality_report)
+
+print("Data Quality Report saved successfully")
+
