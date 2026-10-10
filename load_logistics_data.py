@@ -307,21 +307,21 @@ for lr in reconciliation_lr["booking_only_lr"]:
     exceptions.append({
         "Exception_type" : "BOOKING_ONLY",
         "LR_NO": lr,
-        "Occurence_Count" : 1
+        "Occurrence_Count" : 1
     })
 
 for lr in reconciliation_lr["billing_only_lr"]:
     exceptions.append({
         "Exception_type" : "BILLING_ONLY",
         "LR_NO": lr,
-        "Occurence_Count" : 1
+        "Occurrence_Count" : 1
     })
 
 for lr, count in reconciliation_lr["duplicate_lr_count"].items():
     exceptions.append({
         "Exception_type" : "DUPLICATE_BILLING",
         "LR_NO": lr,
-        "Occurence_Count" : count
+        "Occurrence_Count" : count
     })
 
 data_quality_report = pd.DataFrame(exceptions)
@@ -336,3 +336,15 @@ print("Data Quality Report saved successfully")
 
 print("========== DAY 9 12.10PM ===========")
 
+print("========== DAY 10 11.43PM ===========")
+
+exception_summary = (
+    data_quality_report
+    .groupby("Exception_type")
+    .size()
+    .reset_index(name="Exception_count")
+)
+
+exception_summary.to_csv("exception_summary.csv", index=False)
+print("\n Exception Summary")
+print(exception_summary)

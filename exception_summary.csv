@@ -1,0 +1,4 @@
+Exception_type,Exception_count
+BILLING_ONLY,75
+BOOKING_ONLY,7
+DUPLICATE_BILLING,1
