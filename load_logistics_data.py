@@ -348,3 +348,17 @@ exception_summary = (
 exception_summary.to_csv("exception_summary.csv", index=False)
 print("\n Exception Summary")
 print(exception_summary)
+
+print("========== DAY 11 01.09PM ===========")
+
+filtered_df = data_quality_report[
+    data_quality_report["Exception_type"] != "DUPLICATE_BILLING"
+]
+
+summary = (
+    filtered_df
+    .groupby("Exception_type")["Occurrence_Count"]
+    .sum()
+)
+
+print(summary)
