@@ -362,3 +362,19 @@ summary = (
 )
 
 print(summary)
+
+
+print("========== DAY 12 12.32PM ===========")
+
+filtered_df_2 = data_quality_report[
+    (data_quality_report["Exception_type"] == "BILLING_ONLY") | (data_quality_report["Exception_type"] == "BOOKING_ONLY") 
+]
+
+summary_without_duplicate = (
+    filtered_df_2
+    .groupby("Exception_type")["Occurrence_Count"]
+    .sum()
+) 
+
+print("\n SUMMARY REPORT WITHOUT DUPLICATE BILLING ------------->")
+print(summary_without_duplicate)
