@@ -378,3 +378,25 @@ summary_without_duplicate = (
 
 print("\n SUMMARY REPORT WITHOUT DUPLICATE BILLING ------------->")
 print(summary_without_duplicate)
+
+print("========== DAY 13 12.56PM ===========")
+
+print("\n ============ EXCEPTION COUNT COMPARISON ===========")
+
+row_summary = (
+    data_quality_report
+    .groupby("Exception_type")
+    .size()
+)
+
+occurence_summary = (
+    data_quality_report
+    .groupby("Exception_type")["Occurrence_Count"]
+    .sum()
+)
+
+print("\n Row Count :")
+print(row_summary)
+
+print("\n Total Occurences :")
+print(occurence_summary)
