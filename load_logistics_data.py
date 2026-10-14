@@ -400,3 +400,38 @@ print(row_summary)
 
 print("\n Total Occurences :")
 print(occurence_summary)
+
+print("========== DAY 14 06.08PM ===========")
+
+# row_summary = (
+#     data_quality_report
+#     .groupby("Exception_type")
+#     .size()
+#     .reset_index(name="Row_Count")
+# )
+
+# occurrence_summary = (
+#     data_quality_report
+#     .groupby("Exception_type")["Occurrence_Count"]
+#     .sum()
+#     .reset_index(name="Total_Occurrences")
+
+# )
+
+# final_summary = row_summary.merge(
+#     occurrence_summary,
+#     on="Exception_type"
+# )
+
+final_summary = (
+    data_quality_report
+    .groupby("Exception_type")
+    .agg(
+        Row_Count = ("Occurrence_Count", "size"),
+        Total_Occurrence = ("Occurrence_Count", "sum"),
+        Maximum_Occurrence = ("Occurrence_Count", "max")
+    )
+)
+
+print("\n =========== DAY 14 FINAL EXCEPTION SUMMARY ==========")
+print(final_summary)
