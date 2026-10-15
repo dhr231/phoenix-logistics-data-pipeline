@@ -435,3 +435,164 @@ final_summary = (
 
 print("\n =========== DAY 14 FINAL EXCEPTION SUMMARY ==========")
 print(final_summary)
+
+print("========== DAY 15 1.00PM =========")
+
+
+print("\n========== DAY 15: JOIN READINESS ==========")
+
+print("\n--- BILLING SCHEMA ---")
+print("Shape:", billing.shape)
+print("Columns:", billing.columns.tolist())
+print("\nSample Billing Records:")
+print(billing.head(3).to_string(index=False))
+
+# Normalize LR numbers for comparison
+booking_lr = (
+    booking["LR_NO"]
+    .astype("string")
+    .str.strip()
+)
+
+billing_lr = (
+    billing["LR_NO"]
+    .astype("string")
+    .str.strip()
+)
+
+# Exclude missing and blank LR values
+booking_lr = booking_lr[booking_lr.notna() & booking_lr.ne("")]
+billing_lr = billing_lr[billing_lr.notna() & billing_lr.ne("")]
+
+common_lr = set(booking_lr) & set(billing_lr)
+
+print("\n--- JOIN KEY CHECK ---")
+print("Booking rows:", len(booking))
+print("Billing rows:", len(billing))
+print("Booking valid LR count:", len(booking_lr))
+print("Billing valid LR count:", len(billing_lr))
+print("Common unique LRs:", len(common_lr))
+
+print("\nBooking duplicate LR values:")
+print(booking_lr[booking_lr.duplicated(keep=False)].tolist())
+
+print("\nBilling duplicate LR values:")
+print(billing_lr[billing_lr.duplicated(keep=False)].tolist())
+
+
+
+# Split slash-separated LRs into individual rows
+billing_normalized = billing.copy()
+
+billing_normalized["LR_NO"] = (
+    billing_normalized["LR_NO"]
+    .astype("string")
+    .str.split("/")
+)
+
+billing_normalized = billing_normalized.explode("LR_NO")
+
+billing_normalized["LR_NO"] = (
+    billing_normalized["LR_NO"].str.strip()
+)
+
+# Remove missing or blank LR values
+billing_normalized = billing_normalized[
+    billing_normalized["LR_NO"].notna()
+    & billing_normalized["LR_NO"].ne("")
+].copy()
+
+# Normalize Booking LR values for comparison
+booking_normalized = booking.copy()
+
+booking_normalized["LR_NO"] = (
+    booking_normalized["LR_NO"]
+    .astype("string")
+    .str.strip()
+)
+
+booking_normalized = booking_normalized[
+    booking_normalized["LR_NO"].notna()
+    & booking_normalized["LR_NO"].ne("")
+].copy()
+
+# Compare individual LRs
+booking_lr_set = set(booking_normalized["LR_NO"])
+billing_lr_set = set(billing_normalized["LR_NO"])
+
+common_lr = booking_lr_set & billing_lr_set
+
+print("\n===== DAY 15: NORMALIZED LR CHECK =====")
+print("Original Billing rows:", len(billing))
+print("Normalized Billing rows:", len(billing_normalized))
+print("Booking valid rows:", len(booking_normalized))
+print("Common unique LRs:", len(common_lr))
+print("Common LRs:", sorted(common_lr))
+
+print("\nBooking-only LRs:")
+print(sorted(booking_lr_set - billing_lr_set))
+
+print("\nBilling-only LR count:", len(billing_lr_set - booking_lr_set))
+
+
+
+print("\n===== DAY 15: MISMATCH DIAGNOSIS =====")
+
+print("\n--- BOOKING LR AND DATE ---")
+print(
+    booking_normalized[["LR_NO", "DATE"]]
+    .sort_values("LR_NO")
+    .to_string(index=False)
+)
+
+print("\n--- BILLING LR AND DATE SAMPLE ---")
+print(
+    billing_normalized[["LR_NO", "BILL_DATE"]]
+    .head(10)
+    .to_string(index=False)
+)
+
+booking_dates = __import__("pandas").to_datetime(
+    booking_normalized["DATE"], errors="coerce", dayfirst=True
+)
+
+billing_dates = __import__("pandas").to_datetime(
+    billing_normalized["BILL_DATE"], errors="coerce"
+)
+
+print("\nBooking date range:", booking_dates.min(), "to", booking_dates.max())
+print("Billing date range:", billing_dates.min(), "to", billing_dates.max())
+
+
+
+master_table = booking_normalized.merge(
+    billing_normalized,
+    on="LR_NO",
+    how="outer",
+    suffixes=("_Booking", "_Billing"),
+    indicator=True
+)
+
+master_table["Reconciliation_Status"] = (
+    master_table["_merge"]
+    .map({
+        "both": "MATCHED",
+        "left_only": "BOOKING_ONLY",
+        "right_only": "BILLING_ONLY"
+    })
+)
+
+master_table = master_table.drop(columns=["_merge"])
+
+master_table.to_csv(
+    "master_reconciliation.csv",
+    index=False
+)
+
+print("\n===== DAY 15: MASTER RECONCILIATION =====")
+print("Master rows:", len(master_table))
+print("\nStatus counts:")
+print(master_table["Reconciliation_Status"].value_counts())
+print("\nSample output:")
+print(master_table.head(5).to_string(index=False))
+print("\nSaved: master_reconciliation.csv")
