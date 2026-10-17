@@ -596,3 +596,144 @@ print(master_table["Reconciliation_Status"].value_counts())
 print("\nSample output:")
 print(master_table.head(5).to_string(index=False))
 print("\nSaved: master_reconciliation.csv")
+
+
+print("\n ========== DAY 16 4.00PM =========")
+
+print("\n =========== BILLING RECORD IDENTITY ===========")
+
+billing_source = billing.copy()
+
+billing_source["Billing_Record_ID"] = range(
+    1, len(billing_source) + 1
+)
+
+print("Original billing rows : ", len(billing_source))
+print(
+    billing_source[
+        ["Billing_Record_ID", "BILL_NO", "LR_NO", "FINAL_AMOUNT"]
+    ].head(5).to_string(index = False)
+)
+
+billing_normalized = billing_source.copy()
+
+billing_normalized["LR_NO"] = (
+    billing_normalized["LR_NO"]
+    .astype("string")
+    .str.split("/")
+)
+
+billing_normalized = billing_normalized.explode("LR_NO")
+
+billing_normalized["LR_NO"] = (
+    billing_normalized["LR_NO"].str.strip()
+)
+
+# Remove missing or blank LR values
+billing_normalized = billing_normalized[
+    billing_normalized["LR_NO"].notna()
+    & billing_normalized["LR_NO"].ne("")
+].copy()
+
+# Normalize Booking LR values for comparison
+booking_normalized = booking.copy()
+
+booking_normalized["LR_NO"] = (
+    booking_normalized["LR_NO"]
+    .astype("string")
+    .str.strip()
+)
+
+booking_normalized = booking_normalized[
+    booking_normalized["LR_NO"].notna()
+    & booking_normalized["LR_NO"].ne("")
+].copy()
+
+
+
+print("\n--- BILLING EXPANSION CHECK ---")
+print("Original billing rows:", len(billing_source))
+print("Expanded billing rows:", len(billing_normalized))
+
+print("\nRows per original billing record:")
+print(
+    billing_normalized
+    .groupby("Billing_Record_ID")
+    .size()
+    .sort_values(ascending=False)
+    .head(10)
+)
+
+print("\nSample expanded records:")
+print(
+    billing_normalized[
+        ["Billing_Record_ID", "BILL_NO", "LR_NO", "FINAL_AMOUNT"]
+    ].head(12).to_string(index=False)
+)
+
+
+
+
+print("\n===== DAY 16: FINANCIAL GRAIN CHECK =====")
+
+amount_check = (
+    billing_normalized
+    .groupby("Billing_Record_ID")
+    .agg(
+        LR_Row_Count=("LR_NO", "size"),
+        Distinct_LRs=("LR_NO", "nunique"),
+        Invoice_Amount=("FINAL_AMOUNT", "first"),
+        Repeated_Amount_Sum=("FINAL_AMOUNT", "sum")
+    )
+    .reset_index()
+)
+
+amount_check["Amount_Repeated"] = (
+    amount_check["LR_Row_Count"] > 1
+)
+
+print(
+    amount_check.sort_values(
+        "LR_Row_Count", ascending=False
+    ).head(10).to_string(index=False)
+)
+
+print("\nRecords with repeated amounts:")
+print(amount_check["Amount_Repeated"].sum())
+
+
+
+# One row per original billing record
+billing_level = billing_source.copy()
+
+# One row per individual LR occurrence
+lr_level = billing_normalized[
+    [
+        "Billing_Record_ID",
+        "BILL_NO",
+        "LR_NO",
+        "FINAL_AMOUNT"
+    ]
+].copy()
+
+print("\n===== DAY 16: TABLE GRAIN VALIDATION =====")
+
+print("Billing-level rows:", len(billing_level))
+print("LR-level rows:", len(lr_level))
+
+print(
+    "Billing-level FINAL_AMOUNT total:",
+    billing_level["FINAL_AMOUNT"].sum()
+)
+
+print(
+    "Expanded LR-level FINAL_AMOUNT total:",
+    lr_level["FINAL_AMOUNT"].sum()
+)
+
+print("\nBilling-level sample:")
+print(
+    billing_level[
+        ["Billing_Record_ID", "BILL_NO", "FINAL_AMOUNT"]
+    ].head(5).to_string(index=False)
+)
