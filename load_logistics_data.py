@@ -737,3 +737,89 @@ print(
         ["Billing_Record_ID", "BILL_NO", "FINAL_AMOUNT"]
     ].head(5).to_string(index=False)
 )
+
+
+print("\n========== DAY 17: SAFE MASTER DESIGN ==========")
+
+# 1. Invoice-level financial table: one row per original billing record
+billing_financials = billing_source[
+    [
+        "Billing_Record_ID",
+        "BILL_NO",
+        "BILL_DATE",
+        "FINAL_AMOUNT",
+        "TOTAL_AMOUNT"
+    ]
+].copy()
+
+# 2. LR-level detail: one row per exploded LR occurrence
+billing_lr_detail = billing_normalized[
+    [
+        "Billing_Record_ID",
+        "BILL_NO",
+        "LR_NO"
+    ]
+].copy()
+
+# Keep financial amounts out of the LR-level table
+print("Invoice-level rows:", len(billing_financials))
+print("LR-level rows:", len(billing_lr_detail))
+
+print("\nInvoice-level financial total:")
+print(billing_financials["FINAL_AMOUNT"].sum())
+
+print("\nLR-level sample:")
+print(billing_lr_detail.head(10).to_string(index=False))
+
+
+master_table = booking_normalized.merge(
+    billing_lr_detail,
+    on="LR_NO",
+    how="outer",
+    suffixes=("_Booking", "_Billing"),
+    indicator=True
+)
+
+master_table["Reconciliation_Status"] = (
+    master_table["_merge"]
+    .map({
+        "both": "MATCHED",
+        "left_only": "BOOKING_ONLY",
+        "right_only": "BILLING_ONLY"
+    })
+)
+
+master_table = master_table.drop(columns=["_merge"])
+
+# Save the two outputs separately
+master_table.to_csv("master_reconciliation.csv", index=False)
+billing_financials.to_csv("billing_financials.csv", index=False)
+
+print("\n===== DAY 17: VALIDATION =====")
+print("Master rows:", len(master_table))
+print("Invoice financial rows:", len(billing_financials))
+
+print("\nReconciliation status:")
+print(master_table["Reconciliation_Status"].value_counts())
+
+print("\nOriginal invoice total:")
+print(billing_financials["FINAL_AMOUNT"].sum())
+
+print("\nSaved: master_reconciliation.csv")
+print("Saved: billing_financials.csv")
+
+
+
+print("\n===== DAY 17: INVOICE TOTAL VALIDATION =====")
+
+source_total = billing_source["FINAL_AMOUNT"].sum()
+output_total = billing_financials["FINAL_AMOUNT"].sum()
+
+print("Source total:", round(source_total, 2))
+print("Output total:", round(output_total, 2))
+print("Totals match:", round(source_total, 2) == round(output_total, 2))
+
+print(
+    "Unique billing record IDs:",
+    billing_financials["Billing_Record_ID"].nunique()
+)
