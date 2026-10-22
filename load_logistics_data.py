@@ -889,3 +889,21 @@ validate_pipeline(
     billing_lr_detail,
     master_table
 )
+
+
+print("\n===== DAY 20: OUTPUT FILE AUDIT =====")
+
+master_check = pd.read_csv("master_reconciliation.csv")
+financial_check = pd.read_csv("billing_financials.csv")
+
+print("Master CSV rows:", len(master_check))
+print("Financial CSV rows:", len(financial_check))
+
+print("\nMaster status counts:")
+print(master_check["Reconciliation_Status"].value_counts())
+
+print("\nFinancial CSV total:")
+print(round(financial_check["FINAL_AMOUNT"].sum(), 2))
+
+print("\nFinancial record IDs unique:",
+      financial_check["Billing_Record_ID"].is_unique)
