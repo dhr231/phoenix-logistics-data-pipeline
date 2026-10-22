@@ -827,6 +827,7 @@ print(
 
 print("\n========== DAY 18: PIPELINE VALIDATION ==========")
 
+
 def validate_pipeline(
     billing_source,
     billing_financials,
@@ -834,6 +835,7 @@ def validate_pipeline(
     billing_lr_detail,
     master_table
 ):
+    # 1. Invoice-level checks
     assert len(billing_financials) == len(billing_source)
     assert billing_financials["Billing_Record_ID"].is_unique
 
@@ -843,16 +845,39 @@ def validate_pipeline(
     output_total = round(
         billing_financials["FINAL_AMOUNT"].sum(), 2
     )
-
     assert source_total == output_total
 
+    # 2. LR key checks
+    assert booking_normalized["LR_NO"].notna().all()
+    assert billing_lr_detail["LR_NO"].notna().all()
+
+    assert booking_normalized["LR_NO"].ne("").all()
+    assert billing_lr_detail["LR_NO"].ne("").all()
+
+    # 3. Master reconciliation checks
+    assert master_table["Reconciliation_Status"].notna().all()
+
+    allowed_statuses = {
+        "MATCHED",
+        "BOOKING_ONLY",
+        "BILLING_ONLY"
+    }
+
+    assert set(
+        master_table["Reconciliation_Status"].unique()
+    ).issubset(allowed_statuses)
+
+    # 4. Row-count check for current zero-overlap dataset
     assert len(master_table) == (
         len(booking_normalized) + len(billing_lr_detail)
     )
 
+    print("\n===== DAY 19: DATA QUALITY VALIDATION =====")
     print("Invoice row count: PASS")
-    print("Unique billing IDs: PASS")
+    print("Unique billing record IDs: PASS")
     print("Financial total preservation: PASS")
+    print("No missing or blank LR keys: PASS")
+    print("Valid reconciliation statuses: PASS")
     print("Master row count:", len(master_table))
     print("ALL VALIDATIONS PASSED")
 
