@@ -907,3 +907,20 @@ print(round(financial_check["FINAL_AMOUNT"].sum(), 2))
 
 print("\nFinancial record IDs unique:",
       financial_check["Billing_Record_ID"].is_unique)
+
+
+print("\n===== DAY 22: STATUS AUDIT =====")
+
+status_counts = master_check["Reconciliation_Status"].value_counts()
+
+print(status_counts)
+
+total_status_rows = status_counts.sum()
+master_rows = len(master_check)
+
+print("Total rows across statuses:", total_status_rows)
+print("Master CSV rows:", master_rows)
+
+assert total_status_rows == master_rows
+
+print("Status row-count consistency: PASS")
