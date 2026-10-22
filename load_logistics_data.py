@@ -823,3 +823,44 @@ print(
     "Unique billing record IDs:",
     billing_financials["Billing_Record_ID"].nunique()
 )
+
+
+print("\n========== DAY 18: PIPELINE VALIDATION ==========")
+
+def validate_pipeline(
+    billing_source,
+    billing_financials,
+    booking_normalized,
+    billing_lr_detail,
+    master_table
+):
+    assert len(billing_financials) == len(billing_source)
+    assert billing_financials["Billing_Record_ID"].is_unique
+
+    source_total = round(
+        billing_source["FINAL_AMOUNT"].sum(), 2
+    )
+    output_total = round(
+        billing_financials["FINAL_AMOUNT"].sum(), 2
+    )
+
+    assert source_total == output_total
+
+    assert len(master_table) == (
+        len(booking_normalized) + len(billing_lr_detail)
+    )
+
+    print("Invoice row count: PASS")
+    print("Unique billing IDs: PASS")
+    print("Financial total preservation: PASS")
+    print("Master row count:", len(master_table))
+    print("ALL VALIDATIONS PASSED")
+
+
+validate_pipeline(
+    billing_source,
+    billing_financials,
+    booking_normalized,
+    billing_lr_detail,
+    master_table
+)
